@@ -1,10 +1,9 @@
 pipeline {
    agent any
 
-   tools {
-       maven 'Maven'
-   }
-
+tools {
+    maven 'Maven_3.9.9'
+}
    environment {
        DOCKER_IMAGE = "rimsdk/banking-app"
        DOCKER_TAG = "latest"
