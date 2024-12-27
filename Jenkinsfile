@@ -65,7 +65,7 @@ pipeline {
                         sh """
                             echo \$DOCKER_PASSWORD | docker login -u \$DOCKER_USERNAME --password-stdin
                             docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .  // Construction de l'image Docker
-                            docker push ${DOCKER_IMAGE}:${DOCKER_TAG}  // Push de l'image sur Docker Hub
+                            docker push ${DOCKER_IMAGE}:${DOCKER_TAG}  // Push de l'image Docker sur DockerHub
                         """
                     }
                 }
@@ -80,10 +80,10 @@ pipeline {
                 )]) {
                     // Déployer l'image Docker sur le serveur distant
                     sh """
-                        ssh -i ${SSH_KEY} user@remote-server 'docker pull ${DOCKER_IMAGE}:${DOCKER_TAG}'
-                        ssh -i ${SSH_KEY} user@remote-server 'docker stop banking-app || true'
-                        ssh -i ${SSH_KEY} user@remote-server 'docker rm banking-app || true'
-                        ssh -i ${SSH_KEY} user@remote-server 'docker run -d --name banking-app ${DOCKER_IMAGE}:${DOCKER_TAG}'
+                        ssh -i ${SSH_KEY} user@remote-server 'docker pull ${DOCKER_IMAGE}:${DOCKER_TAG}'  // Pull de l'image Docker sur le serveur distant
+                        ssh -i ${SSH_KEY} user@remote-server 'docker stop banking-app || true'  // Arrêt de l'ancien conteneur
+                        ssh -i ${SSH_KEY} user@remote-server 'docker rm banking-app || true'  // Suppression de l'ancien conteneur
+                        ssh -i ${SSH_KEY} user@remote-server 'docker run -d --name banking-app ${DOCKER_IMAGE}:${DOCKER_TAG}'  // Exécution du nouveau conteneur
                     """
                 }
             }
