@@ -75,25 +75,25 @@ pipeline {
         stage('Deploy') {
             steps {
                 withCredentials([sshUserPrivateKey(
-                    credentialsId: 'ssh-key',  // Accès SSH au serveur distant
+                    credentialsId: 'ssh-key',  // Identifiant de la clé SSH pour se connecter au serveur distant
                     keyFileVariable: 'SSH_KEY'
                 )]) {
                     // Déployer l'image Docker sur le serveur distant
                     sh """
-                        ssh -i ${SSH_KEY} user@remote-server 'docker pull ${DOCKER_IMAGE}:${DOCKER_TAG}'  // Télécharger l'image sur le serveur distant
-                        ssh -i ${SSH_KEY} user@remote-server 'docker stop banking-app || true'  // Arrêter l'ancien conteneur
-                        ssh -i ${SSH_KEY} user@remote-server 'docker rm banking-app || true'  // Supprimer l'ancien conteneur
-                        ssh -i ${SSH_KEY} user@remote-server 'docker run -d --name banking-app ${DOCKER_IMAGE}:${DOCKER_TAG}'  // Lancer le nouveau conteneur
+                        ssh -i ${SSH_KEY} user@remote-server 'docker pull ${DOCKER_IMAGE}:${DOCKER_TAG}'
+                        ssh -i ${SSH_KEY} user@remote-server 'docker stop banking-app || true'
+                        ssh -i ${SSH_KEY} user@remote-server 'docker rm banking-app || true'
+                        ssh -i ${SSH_KEY} user@remote-server 'docker run -d --name banking-app ${DOCKER_IMAGE}:${DOCKER_TAG}'
                     """
                 }
             }
         }
     }
-   post {
+
+    post {
         always {
-            node {  // Fournir un contexte de travail pour la suppression du répertoire
-                deleteDir()  // Supprimer le répertoire de travail après l'exécution de la pipeline
-            }
+            // Suppression du répertoire de travail dans le contexte Docker
+            deleteDir()
         }
     }
 }
