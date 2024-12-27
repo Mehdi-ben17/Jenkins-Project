@@ -1,10 +1,8 @@
-# Utilisation de l'image Maven avec OpenJDK 17
 FROM maven:3.8.5-openjdk-17-slim
 
-# Passer à l'utilisateur root pour installer Docker
 USER root
 
-# Installer Docker CLI
+# Installer Docker
 RUN apt-get update && \
     apt-get install -y docker.io && \
     apt-get clean && \
@@ -13,11 +11,13 @@ RUN apt-get update && \
     mkdir -p /root/.docker && \
     chmod 700 /root/.docker
 
-# Définir le répertoire de travail
+# Passer à l'utilisateur Jenkins après avoir installé Docker
+USER jenkins
+
 WORKDIR /workspace
 
-# Copier tout le contenu de l'hôte vers le conteneur
+# Copier le contenu
 COPY . /workspace
 
-# Exécuter Maven par défaut
+# Définir la commande par défaut pour Maven
 CMD ["mvn", "clean", "package", "-DskipTests"]
