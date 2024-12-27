@@ -34,6 +34,11 @@ pipeline {
                }
            }
        }
+       stage('Test Docker') {
+           steps {
+               sh 'docker --version'
+           }
+       }
 
        stage('Docker Build & Push') {
            steps {
