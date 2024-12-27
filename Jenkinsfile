@@ -6,7 +6,7 @@ pipeline {
    }
 
    environment {
-       DOCKER_IMAGE = "rimsdk/banking-app"
+       DOCKER_IMAGE = "Mehdi/banking-app"
        DOCKER_TAG = "latest"
    }
 
@@ -38,11 +38,12 @@ pipeline {
        stage('Docker Build & Push') {
            steps {
                script {
-                   withCredentials([usernamePassword(
-                       credentialsId: 'dockerhub-credentials',
-                       usernameVariable: 'mehdi2001',
-                       passwordVariable: 'Stage2025'
-                   )]) {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-credentials',
+                    usernameVariable: 'DOCKER_USERNAME',
+                    passwordVariable: 'DOCKER_PASSWORD'
+                )])
+{
                        sh """
                            echo \$DOCKER_PASSWORD | docker login -u \$DOCKER_USERNAME --password-stdin
                            docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
