@@ -1,20 +1,22 @@
 pipeline {
    agent any
 
-tools {
-    maven 'Maven_3.9.9'
-}
+   tools {
+       maven 'Maven_3.9.9'
+   }
+
    environment {
        DOCKER_IMAGE = "rimsdk/banking-app"
        DOCKER_TAG = "latest"
    }
 
    stages {
-   stage('Checkout') {
-       steps {
-           git branch: 'main', url: 'https://github.com/Mehdi-ben17/Jenkins-Project.git'
+       stage('Checkout') {
+           steps {
+               git branch: 'main',
+                   url: 'https://github.com/Mehdi-ben17/Jenkins-Project.git'
+           }
        }
-   }
 
        stage('Build') {
            steps {
@@ -35,18 +37,28 @@ tools {
 
        stage('Docker Build & Push') {
            steps {
-               withDockerRegistry([ credentialsId: "dockerhub-credentials", url: "" ]) {
-                   sh """
-                       docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
-                       docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
-                   """
+               script {
+                   withCredentials([usernamePassword(
+                       credentialsId: 'dockerhub-credentials',
+                       usernameVariable: 'mehdi2001',
+                       passwordVariable: 'Stage2025'
+                   )]) {
+                       sh """
+                           echo \$DOCKER_PASSWORD | docker login -u \$DOCKER_USERNAME --password-stdin
+                           docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
+                           docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
+                       """
+                   }
                }
            }
        }
 
        stage('Deploy') {
            steps {
-               withCredentials([sshUserPrivateKey(credentialsId: 'ssh-key', keyFileVariable: 'SSH_KEY')]) {
+               withCredentials([sshUserPrivateKey(
+                   credentialsId: 'ssh-key',
+                   keyFileVariable: 'SSH_KEY'
+               )]) {
                    sh """
                        ssh -i ${SSH_KEY} user@remote-server 'docker pull ${DOCKER_IMAGE}:${DOCKER_TAG}'
                        ssh -i ${SSH_KEY} user@remote-server 'docker stop banking-app || true'
