@@ -1,26 +1,42 @@
 pipeline {
-    agent any  // Changed from docker agent to allow Docker installation
+    agent any
 
     tools {
         maven 'Maven_3.9.9'
     }
 
     environment {
-        DOCKER_IMAGE = "mehdi/banking-app"  // Changed to lowercase as per Docker naming conventions
+        DOCKER_IMAGE = "mehdi/banking-app"
         DOCKER_TAG = "latest"
+        // Add environment variables for Docker installation
+        DOCKER_INSTALL_DIR = "/var/jenkins_home/docker"
     }
 
     stages {
         stage('Setup Docker') {
             steps {
-                // Install Docker if not present
-                sh '''
-                    if ! command -v docker &> /dev/null; then
-                        curl -fsSL https://get.docker.com -o get-docker.sh
-                        sudo sh get-docker.sh
-                        sudo usermod -aG docker jenkins
-                    fi
-                '''
+                script {
+                    // Install Docker without sudo
+                    sh '''
+                        if ! command -v docker &> /dev/null; then
+                            mkdir -p ${DOCKER_INSTALL_DIR}
+                            curl -fsSL https://get.docker.com -o ${DOCKER_INSTALL_DIR}/get-docker.sh
+                            chmod +x ${DOCKER_INSTALL_DIR}/get-docker.sh
+                            sh ${DOCKER_INSTALL_DIR}/get-docker.sh --dry-run
+                            # Install Docker using alternative method
+                            curl -fsSL https://download.docker.com/linux/static/stable/x86_64/docker-20.10.9.tgz -o ${DOCKER_INSTALL_DIR}/docker.tgz
+                            tar xzvf ${DOCKER_INSTALL_DIR}/docker.tgz -C ${DOCKER_INSTALL_DIR}
+                            export PATH=${DOCKER_INSTALL_DIR}/docker:$PATH
+                            # Start Docker daemon if not running
+                            if ! pgrep dockerd > /dev/null; then
+                                ${DOCKER_INSTALL_DIR}/docker/dockerd &
+                                sleep 10  # Wait for Docker daemon to start
+                            fi
+                        fi
+                        # Verify Docker installation
+                        docker --version || true
+                    '''
+                }
             }
         }
 
@@ -42,7 +58,7 @@ pipeline {
             }
             post {
                 always {
-                    junit '*/target/surefire-reports/.xml'  // Fixed path pattern
+                    junit '*/target/surefire-reports/.xml'
                 }
             }
         }
@@ -56,6 +72,7 @@ pipeline {
                         passwordVariable: 'DOCKER_PASSWORD'
                     )]) {
                         sh """
+                            export PATH=${DOCKER_INSTALL_DIR}/docker:\$PATH
                             echo \$DOCKER_PASSWORD | docker login -u \$DOCKER_USERNAME --password-stdin
                             docker build -t \$DOCKER_USERNAME/${DOCKER_IMAGE}:${DOCKER_TAG} .
                             docker push \$DOCKER_USERNAME/${DOCKER_IMAGE}:${DOCKER_TAG}
@@ -72,6 +89,7 @@ pipeline {
                     keyFileVariable: 'SSH_KEY'
                 )]) {
                     sh """
+                        export PATH=${DOCKER_INSTALL_DIR}/docker:\$PATH
                         ssh -i \$SSH_KEY -o StrictHostKeyChecking=no user@remote-server '
                             docker pull \$DOCKER_USERNAME/${DOCKER_IMAGE}:${DOCKER_TAG} &&
                             docker stop banking-app || true &&
@@ -86,7 +104,7 @@ pipeline {
 
     post {
         always {
-            cleanWs()  // Using cleanWs instead of deleteDir for better cleanup
+            cleanWs()
         }
     }
 }

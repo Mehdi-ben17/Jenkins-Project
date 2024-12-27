@@ -1,23 +1,16 @@
 FROM maven:3.8.5-openjdk-17-slim
 
-# Install Docker and required dependencies
-RUN apt-get update && \
-    apt-get install -y \
-    docker.io \
-    curl \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-# Create Jenkins user and set up permissions
-RUN useradd -m -d /home/jenkins -s /bin/bash jenkins && \
-    usermod -aG docker jenkins
-
-# Switch to Jenkins user
-USER jenkins
+# Copy application files
+COPY . /workspace
 WORKDIR /workspace
 
-# Copy application files
-COPY --chown=jenkins:jenkins . /workspace
+# Build the application
+RUN mvn clean package -DskipTests
 
-# Default command
-CMD ["mvn", "clean", "package", "-DskipTests"]
+# Use multi-stage build for smaller final image
+FROM openjdk:17-slim
+COPY --from=0 /workspace/target/*.jar /app/application.jar
+WORKDIR /app
+
+# Run the application
+CMD ["java", "-jar", "application.jar"]
