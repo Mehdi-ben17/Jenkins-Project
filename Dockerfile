@@ -1,23 +1,23 @@
 FROM maven:3.8.5-openjdk-17-slim
 
-USER root
-
-# Installer Docker
+# Install Docker and required dependencies
 RUN apt-get update && \
-    apt-get install -y docker.io && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* && \
-    # Créer le répertoire .docker avec les bonnes permissions
-    mkdir -p /root/.docker && \
-    chmod 700 /root/.docker
+    apt-get install -y \
+    docker.io \
+    curl \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# Passer à l'utilisateur Jenkins après avoir installé Docker
+# Create Jenkins user and set up permissions
+RUN useradd -m -d /home/jenkins -s /bin/bash jenkins && \
+    usermod -aG docker jenkins
+
+# Switch to Jenkins user
 USER jenkins
-
 WORKDIR /workspace
 
-# Copier le contenu
-COPY . /workspace
+# Copy application files
+COPY --chown=jenkins:jenkins . /workspace
 
-# Définir la commande par défaut pour Maven
+# Default command
 CMD ["mvn", "clean", "package", "-DskipTests"]
