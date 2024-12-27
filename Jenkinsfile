@@ -1,20 +1,10 @@
 pipeline {
-    agent { docker 'maven:3.8.5-openjdk-17-slim' }
-
-    tools {
-        maven 'Maven_3.9.9'
-    }
-
-    environment {
-        DOCKER_IMAGE = "Mehdi/banking-app"
-        DOCKER_TAG = "latest"
-    }
+    agent any
 
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main',
-                    url: 'https://github.com/Mehdi-ben17/Jenkins-Project.git'
+                git branch: 'main', url: 'https://github.com/Mehdi-ben17/Jenkins-Project.git'
             }
         }
 
@@ -78,7 +68,10 @@ pipeline {
 
     post {
         always {
-            deleteDir()
+            // Entourer deleteDir() avec un bloc 'node' pour fournir le contexte requis
+            node {
+                deleteDir() // Supprime les fichiers de l'espace de travail
+            }
         }
     }
 }
