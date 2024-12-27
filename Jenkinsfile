@@ -10,11 +10,11 @@ tools {
    }
 
    stages {
-       stage('Checkout') {
-           steps {
-               git 'https://github.com/Mehdi-ben17/Jenkins-Project.git'
-           }
+   stage('Checkout') {
+       steps {
+           git branch: 'main', url: 'https://github.com/Mehdi-ben17/Jenkins-Project.git'
        }
+   }
 
        stage('Build') {
            steps {
