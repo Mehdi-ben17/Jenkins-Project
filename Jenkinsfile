@@ -89,11 +89,11 @@ pipeline {
             }
         }
     }
-
-    post {
+   post {
         always {
-            // Nettoyer le répertoire de travail après chaque exécution
-            deleteDir()
+            node {  // Fournir un contexte de travail pour la suppression du répertoire
+                deleteDir()  // Supprimer le répertoire de travail après l'exécution de la pipeline
+            }
         }
     }
 }
